@@ -1,0 +1,1 @@
+from views.monitoring import router as service_monitoring_router

@@ -1,0 +1,15 @@
+[project]
+name = "circuit-breaker-manager"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.17.2",
+    "asyncpg>=0.31.0",
+    "fastapi>=0.125.0",
+    "httpx>=0.28.1",
+    "psycopg2>=2.9.11",
+    "pydantic-settings>=2.12.0",
+    "sqlalchemy>=2.0.45",
+    "uvicorn>=0.38.0",
+]
