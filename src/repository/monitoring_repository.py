@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.circuit_breaker import MonitoredServices, StateServiceEnum
 from schemas.monitoring import CreateServiceMonitoringSchema
-from utils.life_checker import check_availability
+from services.life_checker import check_availability
 
 
 async def create_service_monitoring(service_in: CreateServiceMonitoringSchema, db: AsyncSession):
