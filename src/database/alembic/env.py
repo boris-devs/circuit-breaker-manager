@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from src.database.models import service_monitoring # noqa: F401
+from src.database.models import circuit_breaker # noqa: F401
 from src.database.models.base import Base
 from src.database.session_postgresql import sync_postgresql_engine
 

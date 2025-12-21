@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from database.models.service_monitoring import StateServiceEnum
+from database.models.circuit_breaker import StateServiceEnum
 
 
 class CreateServiceMonitoringSchema(BaseModel):

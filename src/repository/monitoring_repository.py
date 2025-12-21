@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.service_monitoring import MonitoredServices, StateServiceEnum
+from database.models.circuit_breaker import MonitoredServices, StateServiceEnum
 from schemas.monitoring import CreateServiceMonitoringSchema
 from utils.life_checker import check_availability
 
@@ -33,7 +33,7 @@ async def check_health_service(service: MonitoredServices, db: AsyncSession):
         else:
             service.state = StateServiceEnum.HALF_OPEN
             await db.commit()
-            return {"status": "Trying to recovery..."}
+            return {"status": 503}
 
     is_healthy = await check_availability(service.url)
 
