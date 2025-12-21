@@ -1,7 +1,7 @@
 import httpx
 
 
-async def check_availability(url):
+async def check_availability(url: str) -> bool:
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(url)
