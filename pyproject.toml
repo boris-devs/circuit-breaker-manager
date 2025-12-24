@@ -12,6 +12,7 @@ dependencies = [
     "pydantic-settings>=2.12.0",
     "redis>=7.1.0",
     "rq>=2.6.1",
+    "rq-dashboard-fast>=0.5.12",
     "rq-scheduler>=0.14.0",
     "sqlalchemy>=2.0.45",
     "uvicorn>=0.38.0",
