@@ -1,1 +1,1 @@
-from views.monitoring import router as service_monitoring_router
+from views.routes import router as service_monitoring_router
