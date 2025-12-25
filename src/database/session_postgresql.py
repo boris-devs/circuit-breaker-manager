@@ -1,8 +1,7 @@
 from typing import AsyncGenerator
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from config.settings import Settings
 
@@ -13,7 +12,7 @@ POSTGRESQL_DATABASE_URL = (f"postgresql+asyncpg://{settings.POSTGRES_USER}:{sett
 
 postgresql_engine = create_async_engine(url=POSTGRESQL_DATABASE_URL, echo=False)
 
-AsyncPostgresSessionLocal = sessionmaker(  # type: ignore
+AsyncPostgresSessionLocal = async_sessionmaker(
     bind=postgresql_engine,
     class_=AsyncSession,
     autocommit=False,
