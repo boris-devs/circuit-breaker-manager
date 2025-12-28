@@ -1,12 +1,10 @@
-from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.circuit_breaker import MonitoredServices, StateServiceEnum
-from schemas.monitoring import CreateServiceMonitoringSchema
-from services.life_checker import check_availability
+from database.models.circuit_breaker import MonitoredServices, StateServiceEnum, CircuitBreakerLog
+from schemas.monitoring import CreateServiceMonitoringSchema, CreateCircuitBreakerLogsSchema
 
 
-async def create_service_monitoring(service_in: CreateServiceMonitoringSchema, db: AsyncSession):
+async def create_service(service_in: CreateServiceMonitoringSchema, db: AsyncSession):
     new = MonitoredServices(name=service_in.name,
                             url=service_in.url,
                             state=service_in.state,
@@ -24,30 +22,16 @@ async def get_service(service_id: int, db: AsyncSession):
     )
 
 
-async def check_health_service(service: MonitoredServices, db: AsyncSession):
-    if service.state == "OPEN":
-        time_passed = datetime.now(timezone.utc) - service.last_failure_time
-        if time_passed.total_seconds() < service.recovery_timeout:
-            return {"status": 503,
-                    "recovery_in": service.recovery_timeout - time_passed.total_seconds()}
-        else:
-            service.state = StateServiceEnum.HALF_OPEN
-            await db.commit()
-            return {"status": 503}
-
-    is_healthy = await check_availability(service.url)
-
-    if is_healthy:
-        service.last_check = datetime.now(timezone.utc)
-        if service.state == StateServiceEnum.HALF_OPEN:
-            service.state = StateServiceEnum.CLOSED
-            service.failure_count = 0
-        await db.commit()
-        return {"status": 200}
-    else:
-        service.state = StateServiceEnum.OPEN
-        service.last_failure_time = datetime.now(timezone.utc)
-        service.last_check = datetime.now(timezone.utc)
-        service.failure_count += 1
-        await db.commit()
-        return {"status": 503}
+async def service_create_logs(
+        db: AsyncSession,
+        service_id: int,
+        old_state: StateServiceEnum,
+        new_state: StateServiceEnum,
+        detail: str | None = None
+):
+    log_data = CreateCircuitBreakerLogsSchema(service_id=service_id,
+                                              old_state=old_state,
+                                              new_state=new_state,
+                                              detail=detail)
+    log = CircuitBreakerLog(**log_data.model_dump())
+    db.add(log)
