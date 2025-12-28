@@ -12,6 +12,7 @@ class CreateServiceMonitoringSchema(BaseModel):
     failure_threshold: int | None = 5
     recovery_timeout: int | None = 60
 
+
 class CreateServiceMonitoringResponseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,11 +26,21 @@ class CreateServiceMonitoringResponseSchema(BaseModel):
     last_failure_time: datetime | None
     last_check: datetime | None
 
+
 class HealthServiceMonitoringSchema(BaseModel):
-    id: str
+    id: int
     name: str
     url: str
     state: str
     failure_count: int
     last_failure_time: datetime | None
     last_check: datetime | None
+
+
+class CreateCircuitBreakerLogsSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    service_id: int
+    old_state: StateServiceEnum
+    new_state: StateServiceEnum
+    detail: str | None
