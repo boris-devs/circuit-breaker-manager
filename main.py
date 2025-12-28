@@ -24,7 +24,8 @@ async def lifespan(_: FastAPI):
 
     scheduler.schedule(scheduled_time=datetime.now(timezone.utc),
                        func=run_all_monitoring_checks_sync,
-                       interval=settings.TIMEOUT_CHECK_SERVICES,
+                       interval=15,
+                       result_ttl=120,
                        repeat=None)
     print("Scheduler started!🚀")
     yield
