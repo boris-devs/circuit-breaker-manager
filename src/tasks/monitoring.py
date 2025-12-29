@@ -19,17 +19,16 @@ async def check_service_availability(
     if service.state == StateServiceEnum.OPEN:
         if service.last_failure_time:
             unlock_time = service.last_failure_time + timedelta(seconds=service.recovery_timeout)
-            if now > unlock_time:
-                await service_create_logs(service_id=service.id,
-                                          old_state=service.state,
-                                          new_state=StateServiceEnum.HALF_OPEN,
-                                          db=db)
-                service.state = StateServiceEnum.HALF_OPEN
-                await db.commit()
-
-                await redis_cache.set_service_status(service_id=service.id,
-                                                     service_data=service)
+            if now < unlock_time:
                 return
+            await service_create_logs(service_id=service.id,
+                                      old_state=service.state,
+                                      new_state=StateServiceEnum.HALF_OPEN,
+                                      db=db)
+            service.state = StateServiceEnum.HALF_OPEN
+
+            await redis_cache.set_service_status(service_id=service.id,
+                                                 service_data=service)
 
     is_healthy = await check_health_service(service.url)
     if is_healthy:
