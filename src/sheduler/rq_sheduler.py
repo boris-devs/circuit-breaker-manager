@@ -1,12 +1,10 @@
-from redis import Redis
+
 from rq import Queue
 from rq_scheduler import Scheduler
-
+from database.session_redis import redis_client_sync
 from config.settings import Settings
 
 settings = Settings()
 
-redis_client = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
-
-queue = Queue(connection=redis_client)
-scheduler = Scheduler(queue=queue, connection=redis_client)
+queue = Queue(connection=redis_client_sync)
+scheduler = Scheduler(queue=queue, connection=redis_client_sync)
