@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.circuit_breaker import MonitoredServices, StateServiceEnum, CircuitBreakerLog
@@ -35,3 +37,10 @@ async def service_create_logs(
                                               detail=detail)
     log = CircuitBreakerLog(**log_data.model_dump())
     db.add(log)
+
+async def circuit_breaker_trip(service: MonitoredServices, db: AsyncSession):
+    service.state = StateServiceEnum.OPEN
+    service.last_check = datetime.now(timezone.utc)
+    service.last_failure_time = datetime.now(timezone.utc)
+    await db.commit()
+    return service
