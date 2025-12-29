@@ -2,12 +2,17 @@ from datetime import timezone, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.circuit_breaker import MonitoredServices, StateServiceEnum, CircuitBreakerLog
+from database.models.circuit_breaker import MonitoredServices, StateServiceEnum
 from repository.monitoring_repository import service_create_logs
+from services.cache_service import CacheCircuitBreakerService
 from services.life_checker import check_health_service
 
 
-async def check_service_availability(service: MonitoredServices, db: AsyncSession):
+async def check_service_availability(
+        service: MonitoredServices,
+        db: AsyncSession,
+        redis_cache: CacheCircuitBreakerService
+):
     now = datetime.now(timezone.utc)
 
     service.last_check = now
@@ -21,17 +26,24 @@ async def check_service_availability(service: MonitoredServices, db: AsyncSessio
                                           db=db)
                 service.state = StateServiceEnum.HALF_OPEN
                 await db.commit()
+
+                await redis_cache.set_service_status(service_id=service.id,
+                                                     service_data=service)
                 return
 
     is_healthy = await check_health_service(service.url)
     if is_healthy:
-        await service_available_success(service, db)
+        await service_available_success(service, db, redis_cache)
     else:
-        await service_available_failure(service, db)
+        await service_available_failure(service, db, redis_cache)
     await db.commit()
 
 
-async def service_available_failure(service: MonitoredServices, db: AsyncSession):
+async def service_available_failure(
+        service: MonitoredServices,
+        db: AsyncSession,
+        redis_cache: CacheCircuitBreakerService
+):
     service.failure_count += 1
     service.last_failure_time = datetime.now(timezone.utc)
     if service.failure_count >= service.failure_threshold:
@@ -39,12 +51,20 @@ async def service_available_failure(service: MonitoredServices, db: AsyncSession
                                   old_state=service.state,
                                   new_state=StateServiceEnum.OPEN,
                                   db=db)
+
         service.state = StateServiceEnum.OPEN
         service.last_failure_time = datetime.now(timezone.utc)
         service.last_check = datetime.now(timezone.utc)
 
+        await redis_cache.set_service_status(service_id=service.id,
+                                             service_data=service)
 
-async def service_available_success(service: MonitoredServices, db: AsyncSession):
+
+async def service_available_success(
+        service: MonitoredServices,
+        db: AsyncSession,
+        redis_cache: CacheCircuitBreakerService
+):
     if service.state != StateServiceEnum.CLOSED:
         await service_create_logs(service_id=service.id,
                                   old_state=service.state,
@@ -53,3 +73,6 @@ async def service_available_success(service: MonitoredServices, db: AsyncSession
     service.state = StateServiceEnum.CLOSED
     service.last_check = datetime.now(timezone.utc)
     service.failure_count = 0
+
+    await redis_cache.set_service_status(service_id=service.id,
+                                         service_data=service)

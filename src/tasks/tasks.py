@@ -1,11 +1,13 @@
 from datetime import timedelta, timezone, datetime
 
+from redis.asyncio import Redis
 from sqlalchemy import select, NullPool, or_
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from config.settings import Settings
 from database.models.circuit_breaker import MonitoredServices
 from database.session_postgresql import POSTGRESQL_DATABASE_URL
+from services.cache_service import CacheCircuitBreakerService
 from sheduler.rq_sheduler import queue
 from tasks.monitoring import check_service_availability
 
@@ -24,7 +26,7 @@ async def run_all_monitoring_checks():
             time_distance = datetime.now(timezone.utc) - timedelta(
                 seconds=settings.TIMEOUT_CHECK_SERVICES)
             services = await db.execute(select(MonitoredServices).where(or_(MonitoredServices.last_check == None,
-                                                                        MonitoredServices.last_check < time_distance)))
+                                                                            MonitoredServices.last_check < time_distance)))
 
             for service in services.scalars():
                 print(f"Checking service {service.name}")
@@ -41,10 +43,12 @@ async def check_service_availability_task(service_id: int):
         expire_on_commit=False,
         autocommit=False,
     )
+    client = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, decode_responses=True)
+    cache_redis = CacheCircuitBreakerService(client)
     try:
         async with async_postgresql_session() as db:
             service = await db.get(MonitoredServices, service_id)
             if service:
-                await check_service_availability(service, db)
+                await check_service_availability(service, db, cache_redis)
     finally:
         await postgresql_engine.dispose()
