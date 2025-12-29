@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from database.session_redis import get_redis_cache
-from repository.monitoring_repository import create_service, get_service
-from schemas.monitoring import CreateServiceMonitoringSchema, CreateServiceMonitoringResponseSchema, \
-    HealthServiceMonitoringSchema
+from repository.monitoring_repository import create_service, get_service, circuit_breaker_trip
+from schemas.monitoring import (CreateServiceMonitoringSchema, CreateServiceMonitoringResponseSchema,
+                                HealthServiceMonitoringSchema)
 from services.cache_service import CacheCircuitBreakerService
 
 router = APIRouter()
@@ -32,3 +32,17 @@ async def health_service(
 
     await redis_cache.set_service_status(service_id=service_id, service_data=service)
     return service
+
+
+@router.post("/circuit-breaker/{service_id}/trip/", response_model=HealthServiceMonitoringSchema)
+async def trip_circuit_breaker(
+        service_id: int,
+        db: AsyncSession = Depends(get_db),
+        redis_cache: CacheCircuitBreakerService = Depends(get_redis_cache)
+):
+    service = await get_service(service_id, db)
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    service_trip = await circuit_breaker_trip(service, db)
+    await redis_cache.set_service_status(service_id=service_id, service_data=service_trip)
+    return service_trip
