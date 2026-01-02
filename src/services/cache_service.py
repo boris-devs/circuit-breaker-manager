@@ -1,13 +1,13 @@
 import json
 
-from redis.asyncio import Redis
+import redis.asyncio as aioredis
 
 from database.models.circuit_breaker import MonitoredServices
 from schemas.monitoring import HealthServiceMonitoringSchema
 
 
 class CacheCircuitBreakerService:
-    def __init__(self, redis_client: Redis):
+    def __init__(self, redis_client:  aioredis.Redis):
         self.redis_client = redis_client
 
     async def get_service_status(self, service_id: int) -> dict | None:
