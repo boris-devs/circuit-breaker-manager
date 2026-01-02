@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import WebSocket, WebSocketDisconnect
+
 from database import get_db
 from database.session_redis import get_redis_cache
+
 from repository.monitoring_repository import create_service, get_service, circuit_breaker_trip
 from schemas.monitoring import (CreateServiceMonitoringSchema, CreateServiceMonitoringResponseSchema,
                                 HealthServiceMonitoringSchema)
 from services.cache_service import CacheCircuitBreakerService
+from services.websocket_manager import ws_manager
 
 router = APIRouter()
 
@@ -46,3 +50,14 @@ async def trip_circuit_breaker(
     service_trip = await circuit_breaker_trip(service, db)
     await redis_cache.set_service_status(service_id=service_id, service_data=service_trip)
     return service_trip
+
+
+@router.websocket("/ws/status")
+async def websocket_endpoint(websocket: WebSocket):
+    await ws_manager.connect(websocket)
+    await websocket.send_text("Connected to websocket!")
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        await ws_manager.disconnect(websocket)
