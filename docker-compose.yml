@@ -1,0 +1,79 @@
+services:
+  web:
+    restart: always
+    build: .
+    container_name: backend-circuit-breaker
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - circuit-breaker-manager-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: postgres-circuit-breaker
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - postgres-data-:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - circuit-breaker-manager-network
+
+  alembic_migrator:
+    build: .
+    command: [ "alembic", "upgrade", "head" ]
+    restart: "no"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - circuit-breaker-manager-network
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/redis-data
+    networks:
+      - circuit-breaker-manager-network
+
+  worker:
+    build: .
+    depends_on:
+      - redis
+    command: rq worker --url redis://redis:6379 --with-scheduler
+    networks:
+      - circuit-breaker-manager-network
+
+networks:
+  circuit-breaker-manager-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local

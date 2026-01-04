@@ -1,0 +1,39 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Environment variables
+.env
+.env.*
+
+# Testing
+.pytest_cache/
+test_*.http
+
+# Documentation
+README.MD
+*.md
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Lock files
+uv.lock
+*.lock
