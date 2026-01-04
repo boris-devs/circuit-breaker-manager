@@ -14,7 +14,6 @@ from views import service_monitoring_router
 from sheduler.rq_sheduler import scheduler
 
 settings = Settings()
-
 app = FastAPI()
 
 instrumentator = Instrumentator().instrument(app)
@@ -48,6 +47,6 @@ app.router.lifespan_context = lifespan
 
 api_version_prefix = "/api/v1"
 
-dashboard = RedisQueueDashboard("redis://localhost:6379", "/rq")
+dashboard = RedisQueueDashboard(f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}", "/rq")
 app.mount("/rq", dashboard)
 app.include_router(service_monitoring_router, prefix=api_version_prefix, tags=["service_monitoring"])
