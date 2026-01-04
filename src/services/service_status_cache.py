@@ -6,8 +6,16 @@ from database.models.circuit_breaker import MonitoredServices
 from schemas.monitoring import HealthServiceMonitoringSchema
 
 
-class CacheCircuitBreakerService:
-    def __init__(self, redis_client:  aioredis.Redis):
+class IRedisServiceStatusCache:
+    async def get_service_status(self, service_id: int):
+        raise NotImplemented
+
+    async def set_service_status(self, service_id: int, service_data: MonitoredServices):
+        raise NotImplemented
+
+
+class RedisServiceStatusCache(IRedisServiceStatusCache):
+    def __init__(self, redis_client: aioredis.Redis):
         self.redis_client = redis_client
 
     async def get_service_status(self, service_id: int) -> dict | None:
