@@ -22,6 +22,9 @@ instrumentator = Instrumentator().instrument(app)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    for job in scheduler.get_jobs():
+        scheduler.cancel(job)
+
     instrumentator.expose(app)
 
     redis_pubsub_manager.redis_client = get_async_redis()
@@ -39,8 +42,6 @@ async def lifespan(_: FastAPI):
     yield
 
     pubsub_task.cancel()
-    for job in scheduler.get_jobs():
-        scheduler.cancel(job)
 
 
 app.router.lifespan_context = lifespan
