@@ -6,7 +6,7 @@ from redis.asyncio import Redis as AsyncRedis
 from config.settings import Settings
 from database.models.circuit_breaker import MonitoredServices
 from database.session_postgresql import POSTGRESQL_DATABASE_URL
-from services.cache_service import CacheCircuitBreakerService
+from services.service_status_cache import RedisServiceStatusCache
 from services.redis_pubsub_manager import redis_pubsub_manager
 from sheduler.rq_sheduler import queue
 from tasks.monitoring import check_service_availability
@@ -51,7 +51,7 @@ async def check_service_availability_task(service_id: int):
         autocommit=False,
     )
     redis_client = AsyncRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, decode_responses=True)
-    redis_cache_service = CacheCircuitBreakerService(redis_client)
+    redis_cache_service = RedisServiceStatusCache(redis_client)
     try:
         async with async_postgresql_session() as db:
             service = await db.get(MonitoredServices, service_id)

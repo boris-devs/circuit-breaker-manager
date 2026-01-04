@@ -1,7 +1,7 @@
 from redis import Redis
 from redis.asyncio import Redis as AsyncRedis
 from config.settings import Settings
-from services.cache_service import CacheCircuitBreakerService
+from services.service_status_cache import RedisServiceStatusCache
 
 settings = Settings()
 
@@ -13,4 +13,4 @@ def get_async_redis() -> AsyncRedis:
 
 
 async def get_redis_cache():
-    return CacheCircuitBreakerService(get_async_redis())
+    return RedisServiceStatusCache(get_async_redis())

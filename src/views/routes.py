@@ -8,7 +8,7 @@ from database.session_redis import get_redis_cache
 from repository.monitoring_repository import create_service, get_service, circuit_breaker_trip
 from schemas.monitoring import (CreateServiceMonitoringSchema, CreateServiceMonitoringResponseSchema,
                                 HealthServiceMonitoringSchema)
-from services.cache_service import CacheCircuitBreakerService
+from services.service_status_cache import IRedisServiceStatusCache
 from services.websocket_manager import ws_manager
 
 router = APIRouter()
@@ -24,7 +24,7 @@ async def register_service(new_service: CreateServiceMonitoringSchema, db: Async
 async def health_service(
         service_id: int,
         db: AsyncSession = Depends(get_db),
-        redis_cache: CacheCircuitBreakerService = Depends(get_redis_cache)
+        redis_cache: IRedisServiceStatusCache = Depends(get_redis_cache)
 ):
     cached_status = await redis_cache.get_service_status(service_id)
     if cached_status:
@@ -42,7 +42,7 @@ async def health_service(
 async def trip_circuit_breaker(
         service_id: int,
         db: AsyncSession = Depends(get_db),
-        redis_cache: CacheCircuitBreakerService = Depends(get_redis_cache)
+        redis_cache: IRedisServiceStatusCache = Depends(get_redis_cache)
 ):
     service = await get_service(service_id, db)
     if not service:

@@ -4,14 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.circuit_breaker import MonitoredServices, StateServiceEnum
 from repository.monitoring_repository import service_create_logs
-from services.cache_service import CacheCircuitBreakerService
+from services.service_status_cache import IRedisServiceStatusCache
 from services.life_checker import check_health_service
 
 
 async def check_service_availability(
         service: MonitoredServices,
         db: AsyncSession,
-        redis_cache: CacheCircuitBreakerService
+        redis_cache: IRedisServiceStatusCache
 ):
     now = datetime.now(timezone.utc)
 
@@ -41,7 +41,7 @@ async def check_service_availability(
 async def service_available_failure(
         service: MonitoredServices,
         db: AsyncSession,
-        redis_cache: CacheCircuitBreakerService
+        redis_cache: IRedisServiceStatusCache
 ):
     service.failure_count += 1
     service.last_failure_time = datetime.now(timezone.utc)
@@ -62,7 +62,7 @@ async def service_available_failure(
 async def service_available_success(
         service: MonitoredServices,
         db: AsyncSession,
-        redis_cache: CacheCircuitBreakerService
+        redis_cache: IRedisServiceStatusCache
 ):
     if service.state != StateServiceEnum.CLOSED:
         await service_create_logs(service_id=service.id,
