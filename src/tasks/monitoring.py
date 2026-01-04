@@ -35,7 +35,6 @@ async def check_service_availability(
         await service_available_success(service, db, redis_cache)
     else:
         await service_available_failure(service, db, redis_cache)
-    await db.commit()
 
 
 async def service_available_failure(
