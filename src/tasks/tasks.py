@@ -5,7 +5,7 @@ from config.settings import Settings
 from database.models.circuit_breaker import MonitoredServices
 from services.service_status_cache import RedisServiceStatusCache
 from services.redis_pubsub_manager import redis_pubsub_manager
-from sheduler.rq_sheduler import queue
+from scheduler.rq_sheduler import queue
 from tasks.db import get_session_factory, get_redis_client
 from tasks.monitoring import check_service_availability
 

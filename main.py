@@ -11,7 +11,7 @@ from services.redis_pubsub_manager import redis_pubsub_manager
 from services.websocket_manager import ws_manager
 from tasks.tasks import run_monitoring_and_notify_job
 from views import service_monitoring_router
-from sheduler.rq_sheduler import scheduler
+from scheduler.rq_sheduler import scheduler
 
 settings = Settings()
 app = FastAPI()
