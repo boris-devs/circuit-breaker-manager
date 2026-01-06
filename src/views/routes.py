@@ -14,13 +14,13 @@ from services.websocket_manager import ws_manager
 router = APIRouter()
 
 
-@router.post("/register_service/", response_model=CreateServiceMonitoringResponseSchema)
+@router.post("/register_service/", response_model=CreateServiceMonitoringResponseSchema, status_code=201)
 async def register_service(new_service: CreateServiceMonitoringSchema, db: AsyncSession = Depends(get_db)):
     created_service = await create_service(new_service, db)
     return created_service
 
 
-@router.get("/health/{service_id}/", response_model=HealthServiceMonitoringSchema)
+@router.get("/health/{service_id}/", response_model=HealthServiceMonitoringSchema, status_code=200)
 async def health_service(
         service_id: int,
         db: AsyncSession = Depends(get_db),
@@ -38,7 +38,7 @@ async def health_service(
     return service
 
 
-@router.post("/circuit-breaker/{service_id}/trip/", response_model=HealthServiceMonitoringSchema)
+@router.post("/circuit-breaker/{service_id}/trip/", response_model=HealthServiceMonitoringSchema, status_code=200)
 async def trip_circuit_breaker(
         service_id: int,
         db: AsyncSession = Depends(get_db),
