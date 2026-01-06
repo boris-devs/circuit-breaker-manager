@@ -6,7 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from rq_dashboard_fast import RedisQueueDashboard
 
 from config.settings import Settings
-from database.session_redis import get_async_redis
+from database import redis_async_client
 from services.redis_pubsub_manager import redis_pubsub_manager
 from services.websocket_manager import ws_manager
 from tasks.tasks import run_monitoring_and_notify_job
@@ -26,7 +26,7 @@ async def lifespan(_: FastAPI):
 
     instrumentator.expose(app)
 
-    redis_pubsub_manager.redis_client = get_async_redis()
+    redis_pubsub_manager.redis_client = redis_async_client()
     scheduler.schedule(scheduled_time=datetime.now(timezone.utc),
                        func=run_monitoring_and_notify_job,
                        interval=15,
