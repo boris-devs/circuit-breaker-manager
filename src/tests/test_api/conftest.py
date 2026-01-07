@@ -1,6 +1,8 @@
+from contextlib import asynccontextmanager
+
 import pytest
 
-from fastapi import websockets
+from fastapi import websockets, FastAPI
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from fakeredis.aioredis import FakeRedis
@@ -50,9 +52,21 @@ async def db_session(async_db_engine):
         await session.rollback()
 
 
+@asynccontextmanager
+async def mocked_lifespan(_: FastAPI):
+    print("Started mocked lifespan")
+    yield
+    print("Finished mocked lifespan")
+
+
 @pytest.fixture
-def _app():
-    return app
+async def _app():
+    original_lifespan = app.router.lifespan_context
+    app.router.lifespan_context = mocked_lifespan
+
+    yield app
+
+    app.router.lifespan_context = original_lifespan
 
 
 @pytest.fixture()
