@@ -47,6 +47,6 @@ app.router.lifespan_context = lifespan
 
 api_version_prefix = "/api/v1"
 
-dashboard = RedisQueueDashboard(f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}", "/rq")
+dashboard = RedisQueueDashboard(settings.redis_url, "/rq")
 app.mount("/rq", dashboard)
 app.include_router(service_monitoring_router, prefix=api_version_prefix, tags=["service_monitoring"])
