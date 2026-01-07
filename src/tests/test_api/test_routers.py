@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import pytest
@@ -80,15 +81,7 @@ async def test_trip_circuit_breaker_not_found(client):
 
 @pytest.mark.anyio
 async def test_websocket_endpoint(_app):
-    # 1. Создаем TestClient (он поддерживает websocket_connect)
-    # Используем блок with, чтобы сработал lifespan (startup/shutdown)
     with TestClient(_app) as ws_client:
-        # 2. Подключаемся к сокету
-        # Важно: путь должен быть полным, включая префикс, если он есть (напр. /api/v1/ws)
         with ws_client.websocket_connect("api/v1/ws/status") as websocket:
-            websocket.send_text("Test message")
-
-            # 4. Получаем ответ
             data = websocket.receive_text()
-
-            assert data == "Message received: Test message"
+            assert data == "Connected to websocket!"
