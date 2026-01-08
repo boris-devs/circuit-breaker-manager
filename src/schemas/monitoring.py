@@ -1,16 +1,21 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, AnyHttpUrl, field_validator
 
 from database.models.circuit_breaker import StateServiceEnum
 
 
 class CreateServiceMonitoringSchema(BaseModel):
     name: str
-    url: str
+    url: AnyHttpUrl
     state: StateServiceEnum = StateServiceEnum.CLOSED
     failure_threshold: int | None = 5
     recovery_timeout: int | None = 60
+
+    @field_validator("url", mode="after")
+    @classmethod
+    def url_to_str(cls, v):
+        return str(v)
 
 
 class CreateServiceMonitoringResponseSchema(BaseModel):
