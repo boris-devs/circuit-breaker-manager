@@ -8,7 +8,6 @@ from sqlalchemy import update
 from starlette.testclient import TestClient
 
 from database.models.circuit_breaker import MonitoredServices
-from main import app
 
 
 @pytest.mark.anyio
